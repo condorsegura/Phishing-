@@ -1,0 +1,628 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyMJLSsngphzRH9fLGcad0k6",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/condorsegura/Phishing-/blob/main/Untitled1.ipynb%20spark\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "id": "FPUBGrHH8kaR"
+      },
+      "outputs": [],
+      "source": [
+        "!apt-get install openjdk-8-jdk-headless -qq > /dev/null"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!wget -q https://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop3.2.tgz"
+      ],
+      "metadata": {
+        "id": "NAn8u1TG8vO-"
+      },
+      "execution_count": 2,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!tar xf spark-3.0.0-bin-hadoop3.2.tgz"
+      ],
+      "metadata": {
+        "id": "HaH06OyL86Uz"
+      },
+      "execution_count": 3,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!pip install -q findspark"
+      ],
+      "metadata": {
+        "id": "jd0-Bo179D11"
+      },
+      "execution_count": 4,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!pip install -q pyspark"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "tViz1kvx9HoC",
+        "outputId": "a66d6ba2-f877-4aec-8345-3c3d7717fffc"
+      },
+      "execution_count": 5,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m310.8/310.8 MB\u001b[0m \u001b[31m4.5 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25h  Preparing metadata (setup.py) ... \u001b[?25l\u001b[?25hdone\n",
+            "  Building wheel for pyspark (setup.py) ... \u001b[?25l\u001b[?25hdone\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import os\n",
+        "os.environ[\"JAVA_HOME\"] = \"/usr/lib/jvm/java-8-openjdk-amd64\"\n",
+        "os.environ[\"SPARK_HOME\"] = \"/content/spark-3.0.0-bin-hadoop3.2\""
+      ],
+      "metadata": {
+        "id": "iewIgIXC9Uk0"
+      },
+      "execution_count": 6,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import findspark\n",
+        "findspark.init()\n"
+      ],
+      "metadata": {
+        "id": "9V9h9_8m9ZnO"
+      },
+      "execution_count": 7,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from pyspark.sql import SparkSession\n",
+        "spark = SparkSession.builder.master(\"local[*]\").getOrCreate()"
+      ],
+      "metadata": {
+        "id": "NBKRlGqm9eS-"
+      },
+      "execution_count": 8,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dataset = spark.read.csv('/content/sample_data/california_housing_test.csv',\n",
+        "inferSchema=True, header =True)"
+      ],
+      "metadata": {
+        "id": "VKsqaybp9inV"
+      },
+      "execution_count": 9,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dataset.printSchema()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "lzS-vNfu9mSy",
+        "outputId": "1977ef1c-030b-4623-da9f-62e40e60957f"
+      },
+      "execution_count": 10,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "root\n",
+            " |-- longitude: double (nullable = true)\n",
+            " |-- latitude: double (nullable = true)\n",
+            " |-- housing_median_age: double (nullable = true)\n",
+            " |-- total_rooms: double (nullable = true)\n",
+            " |-- total_bedrooms: double (nullable = true)\n",
+            " |-- population: double (nullable = true)\n",
+            " |-- households: double (nullable = true)\n",
+            " |-- median_income: double (nullable = true)\n",
+            " |-- median_house_value: double (nullable = true)\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dataset.head()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "kREhYxLl9n6z",
+        "outputId": "72974d98-fb4c-4eda-921d-f51a5dc5e189"
+      },
+      "execution_count": 11,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "Row(longitude=-122.05, latitude=37.37, housing_median_age=27.0, total_rooms=3885.0, total_bedrooms=661.0, population=1537.0, households=606.0, median_income=6.6085, median_house_value=344700.0)"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 11
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "spark.stop()"
+      ],
+      "metadata": {
+        "id": "uSh5MweF9tBv"
+      },
+      "execution_count": 12,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from pyspark import SparkContext\n",
+        "spark_contexto = SparkContext()\n",
+        "print(spark_contexto)\n",
+        "print(spark_contexto.version)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "rCbKUcH_9yZ7",
+        "outputId": "d7a56f90-8b7a-42a9-bf55-8f1bfc1586b1"
+      },
+      "execution_count": 14,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "<SparkContext master=local[*] appName=pyspark-shell>\n",
+            "3.0.0\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from pyspark.sql import SparkSession\n",
+        "spark = SparkSession.builder.getOrCreate() # Create my_spark\n",
+        "print(spark) # Print my_spark"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "G4T2Cgzg97hf",
+        "outputId": "6dce4c4d-ef0b-4b89-b8ea-dd1c2cb84608"
+      },
+      "execution_count": 15,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "<pyspark.sql.session.SparkSession object at 0x7ec4afb94fd0>\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dataset = spark.read.csv('/content/sample_data/california_housing_test.csv',inferSchema=True, header =True)"
+      ],
+      "metadata": {
+        "id": "i6JGC20q9_WN"
+      },
+      "execution_count": 16,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dataset.createOrReplaceTempView(\"tabela_temporaria\")\n",
+        "print(spark.catalog.listTables())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "FwxBV0fu-BXZ",
+        "outputId": "d2f537b2-ac3b-4955-cd2e-777cd20db95f"
+      },
+      "execution_count": 17,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "[Table(name='tabela_temporaria', database=None, description=None, tableType='TEMPORARY', isTemporary=True)]\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "query = \"FROM tabela_temporaria SELECT longitude, latitude LIMIT 3\"\n",
+        "saida = spark.sql(query)\n",
+        "saida.show()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "MJvMSu_R-LVr",
+        "outputId": "f4705c62-22f2-446c-e6c6-0afb7e4a4cca"
+      },
+      "execution_count": 18,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "+---------+--------+\n",
+            "|longitude|latitude|\n",
+            "+---------+--------+\n",
+            "|  -122.05|   37.37|\n",
+            "|   -118.3|   34.26|\n",
+            "|  -117.81|   33.78|\n",
+            "+---------+--------+\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "query1 = \"SELECT MAX(total_rooms) as maximo_quartos FROM tabela_temporaria\"\n",
+        "q_maximo_quartos = spark.sql(query1)\n",
+        "pd_maximo_quartos = q_maximo_quartos.toPandas()\n",
+        "print('A quantidade máxima de quartos é: {}'.format(pd_maximo_quartos['maximo_quartos']))\n",
+        "qtd_maximo_quartos = int(pd_maximo_quartos.loc[0,'maximo_quartos'])\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "MUHy-nuu-NgG",
+        "outputId": "c4c61097-cf8c-4da7-fcac-6deb40c6dc63"
+      },
+      "execution_count": 19,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "A quantidade máxima de quartos é: 0    30450.0\n",
+            "Name: maximo_quartos, dtype: float64\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "query2 = \"SELECT longitude, latitude FROM tabela_temporaria WHERE total_rooms = \"+str(qtd_maximo_quartos)\n",
+        "localizacao_maximo_quartos = spark.sql(query2)\n",
+        "pd_localizacao_maximo_quartos = localizacao_maximo_quartos.toPandas()\n",
+        "print(pd_localizacao_maximo_quartos.head())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "IZansWZg-XUY",
+        "outputId": "51b35b8c-3ebd-4f97-b418-88dfcb681c3e"
+      },
+      "execution_count": 20,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "   longitude  latitude\n",
+            "0     -117.2     33.58\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "media = 0\n",
+        "desvio_padrao=0.1\n",
+        "pd_temporario = pd.DataFrame(np.random.normal(media,desvio_padrao,100))\n",
+        "spark_temporario = spark.createDataFrame(pd_temporario)\n",
+        "print(spark.catalog.listTables())\n",
+        "spark_temporario.createOrReplaceTempView(\"nova_tabela_temporaria\")\n",
+        "print(spark.catalog.listTables())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "IPU2iXwb-bGU",
+        "outputId": "8bc2d103-629f-4df7-c564-067f755ec00c"
+      },
+      "execution_count": 21,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "/content/spark-3.0.0-bin-hadoop3.2/python/pyspark/sql/pandas/conversion.py:327: FutureWarning: iteritems is deprecated and will be removed in a future version. Use .items instead.\n",
+            "  for column, series in pdf.iteritems():\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "[Table(name='tabela_temporaria', database=None, description=None, tableType='TEMPORARY', isTemporary=True)]\n",
+            "[Table(name='nova_tabela_temporaria', database=None, description=None, tableType='TEMPORARY', isTemporary=True), Table(name='tabela_temporaria', database=None, description=None, tableType='TEMPORARY', isTemporary=True)]\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "spark.stop()"
+      ],
+      "metadata": {
+        "id": "9aWyAGw2-jTW"
+      },
+      "execution_count": 22,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from pyspark import SparkContext\n",
+        "spark_contexto = SparkContext()"
+      ],
+      "metadata": {
+        "id": "CT7xxJ1u-9yN"
+      },
+      "execution_count": 23,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import numpy as np"
+      ],
+      "metadata": {
+        "id": "6a8WneLP_Pdh"
+      },
+      "execution_count": 24,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "vetor = np.array([10, 20, 30, 40, 50])"
+      ],
+      "metadata": {
+        "id": "qFXWk9cy_Wef"
+      },
+      "execution_count": 25,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "paralelo = spark_contexto.parallelize(vetor)"
+      ],
+      "metadata": {
+        "id": "7nLUQpKt_hmI"
+      },
+      "execution_count": 26,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "print(paralelo)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "LLVKQ1EK_q1p",
+        "outputId": "ff62645e-de24-4530-caeb-414453311ee0"
+      },
+      "execution_count": 27,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "ParallelCollectionRDD[0] at readRDDFromFile at PythonRDD.scala:262\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "mapa = paralelo.map(lambda x : x**2+x)"
+      ],
+      "metadata": {
+        "id": "GIHwUZtn_80c"
+      },
+      "execution_count": 28,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "mapa.collect()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "0hRnIpWiAMK5",
+        "outputId": "0bf47bf0-3ca8-4ef2-918b-f6d3ea97bfb6"
+      },
+      "execution_count": 29,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "[110, 420, 930, 1640, 2550]"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 29
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "paralelo = spark_contexto.parallelize([\"distribuida\", \"distribuida\", \"spark\", \"rdd\", \"spark\", \"spark\"])\n"
+      ],
+      "metadata": {
+        "id": "NCFsC3S7Ac8I"
+      },
+      "execution_count": 30,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "funcao_lambda = lambda x:(x,1)"
+      ],
+      "metadata": {
+        "id": "-ukcozRFAolB"
+      },
+      "execution_count": 31,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from operator import add\n",
+        "mapa = paralelo.map(funcao_lambda).reduceByKey(add).collect()"
+      ],
+      "metadata": {
+        "id": "r12Zpz8ZA3kX"
+      },
+      "execution_count": 32,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "for (w, c) in mapa:\n",
+        "\n",
+        "  print(\"{}: {}\".format(w, c))\n",
+        "\n",
+        "#Esse código percorre a lista mapa e imprime cada par formado pela palavra e sua respectiva ocorrência. A saída é a seguinte:\n",
+        "\n",
+        "#distribuida: 2\n",
+        "\n",
+        "#spark: 3\n",
+        "\n",
+        "#rdd: 1"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Oq01oYLTBNhW",
+        "outputId": "a945a861-3e63-46a2-d4d6-1af01243df98"
+      },
+      "execution_count": 34,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "distribuida: 2\n",
+            "spark: 3\n",
+            "rdd: 1\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "spark_contexto.stop()\n"
+      ],
+      "metadata": {
+        "id": "RVJZ1aSyBvQ-"
+      },
+      "execution_count": 35,
+      "outputs": []
+    }
+  ]
+}
